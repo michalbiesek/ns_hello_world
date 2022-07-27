@@ -9,6 +9,8 @@
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <sys/utsname.h>
 #include <unistd.h>
@@ -17,7 +19,7 @@ typedef unsigned int bool;
 #define TRUE 1
 #define FALSE 0
 
-#define PID_NAMESPACE_PERM (CLONE_NEWUTS | CLONE_NEWPID | CLONE_NEWNS)
+#define PID_NAMESPACE_PERM (CLONE_NEWPID | CLONE_NEWNS)
 #define OS_RELEASE_INFO_FILE ("/etc/os-release")
 
 static int pid_fd_open(pid_t pid, unsigned int flags) {
@@ -51,6 +53,7 @@ static void print_os_info(void) {
 
   fprintf(stderr, "hostname = %s\n", hostname);
 
+  int err;
   char str[BUF_LEN] = {0};
 
   FILE *fp = fopen(OS_RELEASE_INFO_FILE, "r");
@@ -65,7 +68,7 @@ static void print_os_info(void) {
     exit(EXIT_FAILURE);
   }
 
-  int err = fclose(fp);
+  err = fclose(fp);
   if (err) {
     fprintf(stderr, "!fopen failed errno %d\n", errno);
     exit(EXIT_FAILURE);
@@ -85,6 +88,17 @@ long strtol_error(const char *str) {
   }
   return ret;
 }
+
+// static void create_tmp_file(void) {
+//   int fd = shm_open("/test", O_RDWR|O_CREAT, S_IRUSR|S_IRGRP|S_IROTH);
+//   if (fd == -1) {
+//       perror("shm_open() failed");
+//       return EXIT_FAILURE;
+//   } else {
+//     fprintf(stderr, "success");
+//     close(fd);
+//   }
+// }
 
 // Main
 
